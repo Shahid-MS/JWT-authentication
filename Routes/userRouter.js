@@ -1,0 +1,61 @@
+const express = require("express");
+const path = require("path");
+const multer = require("multer");
+const userController = require("../Controllers/userController");
+const router = express();
+router.use(express.json());
+
+const {
+  registerValidator,
+  sendMailVerificationValidator,
+  passwordResetValidator,
+} = require("../Helpers/validator");
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+      cb(null, path.join(__dirname, "../public/images"));
+    }
+  },
+  filename: (req, file, cb) => {
+    if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+      const fileName = Date.now() + "_" + file.originalname;
+      cb(null, fileName);
+    }
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+});
+
+router.post(
+  "/register",
+  upload.single("image"),
+  registerValidator,
+  userController.register
+);
+
+router.post(
+  "/send-email-verification",
+  sendMailVerificationValidator,
+  userController.sendMailVerification
+);
+
+router.post(
+  "/password-reset",
+  passwordResetValidator,
+  userController.passwordReset
+);
+
+
+module.exports = router;
