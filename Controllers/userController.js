@@ -9,6 +9,9 @@ const PasswordReset = require("../Models/PasswordReset");
 const randomString = require("randomstring");
 const ObjectId = mongoose.Types.ObjectId;
 
+const path = require("path");
+const { deleteFile } = require("../Helpers/deleteFiles.js");
+
 const register = async (req, res, file) => {
   try {
     const errors = validationResult(req);
@@ -249,7 +252,7 @@ const resetSuccess = (req, res) => {
 //Generating token
 const generateAccesstoken = async (user) => {
   const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "2h",
+    expiresIn: "24h",
   });
   return token;
 };
@@ -352,6 +355,10 @@ const updateProfile = async (req, res) => {
     if (req.file !== undefined) {
       // console.log(req.file.filename);
       newData.image = "images/" + req.file.filename;
+      const oldUser = await User.findById(userData._id);
+      const oldImagePath = path.join(__dirname, "../public/" + oldUser.image);
+
+      deleteFile(oldImagePath);
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -366,8 +373,7 @@ const updateProfile = async (req, res) => {
       success: true,
       msg: "User successfully updated",
       user: updatedUser,
-    }); 
-    
+    });
   } catch (error) {
     console.log(error);
     return res.status(400).json({
