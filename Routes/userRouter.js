@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const multer = require("multer");
 const userController = require("../Controllers/userController");
+const auth = require("../Middleware/auth");
 const router = express();
 router.use(express.json());
 
@@ -9,6 +10,7 @@ const {
   registerValidator,
   sendMailVerificationValidator,
   passwordResetValidator,
+  loginValidator,
 } = require("../Helpers/validator");
 
 const storage = multer.diskStorage({
@@ -57,5 +59,10 @@ router.post(
   userController.passwordReset
 );
 
+router.post("/login", loginValidator, userController.login);
+
+//Authenticated api
+
+router.get("/user-profile", auth, userController.userProfile);
 
 module.exports = router;

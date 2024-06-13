@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const User = require("../Models/User");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 
 const mailer = require("../Helpers/mailer");
@@ -244,6 +245,89 @@ const resetSuccess = (req, res) => {
   }
 };
 
+//Generating token
+const generateAccesstoken = async (user) => {
+  const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+    expiresIn: "2h",
+  });
+  return token;
+};
+
+const login = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        msg: "Errors",
+        errors: errors.array(),
+      });
+    }
+    // console.log(req.body);
+    const { email, password } = req.body;
+
+    const userData = await User.findOne({ email });
+
+    if (!userData) {
+      return res.status(400).json({
+        success: false,
+        msg: "Email and Password is incorrect",
+      });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, userData.password);
+
+    // console.log(passwordMatch);
+
+    if (!passwordMatch) {
+      return res.status(400).json({
+        success: false,
+        msg: "Email and Password is incorrect",
+      });
+    }
+
+    if (userData.is_verified == 0) {
+      return res.status(400).json({
+        success: false,
+        msg: "Please verify your account",
+      });
+    }
+
+    const accessToken = await generateAccesstoken({ user: userData });
+    return res.status(200).json({
+      success: true,
+      msg: "Login successfully",
+      user: userData,
+      accessToken,
+      tokenType: "Bearer",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({
+      success: false,
+      msg: error,
+    });
+  }
+};
+
+const userProfile = async (req, res) => {
+  try {
+    const userData = req.user.user;
+    return res.status(200).json({
+      success: true,
+      msg: "User successfully authenticated",
+      user: userData,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({
+      success: false,
+      msg: error,
+    });
+  }
+};
+
 module.exports = {
   register,
   mailVerification,
@@ -252,4 +336,6 @@ module.exports = {
   resetPasswordForm,
   updatePassword,
   resetSuccess,
+  login,
+  userProfile,
 };
