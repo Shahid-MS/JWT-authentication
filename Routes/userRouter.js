@@ -11,6 +11,7 @@ const {
   sendMailVerificationValidator,
   passwordResetValidator,
   loginValidator,
+  updateProfileValidator,
 } = require("../Helpers/validator");
 
 const storage = multer.diskStorage({
@@ -64,5 +65,15 @@ router.post("/login", loginValidator, userController.login);
 //Authenticated api
 
 router.get("/user-profile", auth, userController.userProfile);
+
+router.post(
+  "/update-profile",
+  auth,
+  upload.single("image"),
+  updateProfileValidator,
+  userController.updateProfile
+);
+
+
 
 module.exports = router;

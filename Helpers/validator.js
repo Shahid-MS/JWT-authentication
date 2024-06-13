@@ -54,3 +54,11 @@ exports.loginValidator = [
 
   check("password", "Please enter a password").not().isEmpty(),
 ];
+
+exports.updateProfileValidator = [
+  check("name", "Name is Required").not().isEmpty(),
+  check("mobile", "Mobile number should contains 10 digits").isLength({
+    min: 10,
+    max: 10,
+  }),
+];

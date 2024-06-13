@@ -39,6 +39,7 @@ const register = async (req, res, file) => {
       password: hashPassword,
       image: "images/" + req.file.filename,
     });
+    console.log(newUser.image);
 
     const userData = await newUser.save();
     const msg = `<p> Hii  ${name}. <a href = "http://localhost:8080/mail-verification/${userData._id}" >Verify </a> your account`;
@@ -328,6 +329,54 @@ const userProfile = async (req, res) => {
   }
 };
 
+const updateProfile = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        msg: "Errors",
+        errors: errors.array(),
+      });
+    }
+
+    const userData = req.user.user;
+    const { name, mobile } = req.body;
+    // console.log(req.body);
+
+    const newData = {
+      name,
+      mobile,
+    };
+
+    if (req.file !== undefined) {
+      // console.log(req.file.filename);
+      newData.image = "images/" + req.file.filename;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userData._id,
+      {
+        $set: newData,
+      },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      msg: "User successfully updated",
+      user: updatedUser,
+    }); 
+    
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({
+      success: false,
+      msg: error,
+    });
+  }
+};
+
 module.exports = {
   register,
   mailVerification,
@@ -338,4 +387,5 @@ module.exports = {
   resetSuccess,
   login,
   userProfile,
+  updateProfile,
 };
