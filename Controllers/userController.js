@@ -1,16 +1,18 @@
 const mongoose = require("mongoose");
 const User = require("../Models/User");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
-
+const BlacklistToken = require("../Models/BlacklistToken.js");
 const mailer = require("../Helpers/mailer");
 const PasswordReset = require("../Models/PasswordReset");
 const randomString = require("randomstring");
 const ObjectId = mongoose.Types.ObjectId;
-
 const path = require("path");
 const { deleteFile } = require("../Helpers/deleteFiles.js");
+const {
+  generateAccesstoken,
+  generateRefreshtoken,
+} = require("../Helpers/token.js");
 
 const register = async (req, res, file) => {
   try {
@@ -249,14 +251,6 @@ const resetSuccess = (req, res) => {
   }
 };
 
-//Generating token
-const generateAccesstoken = async (user) => {
-  const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "24h",
-  });
-  return token;
-};
-
 const login = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -299,11 +293,14 @@ const login = async (req, res) => {
     }
 
     const accessToken = await generateAccesstoken({ user: userData });
+    const refreshToken = await generateRefreshtoken({ user: userData });
+
     return res.status(200).json({
       success: true,
       msg: "Login successfully",
       user: userData,
       accessToken,
+      refreshToken,
       tokenType: "Bearer",
     });
   } catch (error) {
@@ -383,6 +380,59 @@ const updateProfile = async (req, res) => {
   }
 };
 
+const refreshToken = async (req, res) => {
+  try {
+    // console.log("Refresh token");
+    const userId = req.user.user._id;
+    const userData = await User.findById(userId);
+    const accessToken = await generateAccesstoken({ user: userData });
+    const refreshToken = await generateRefreshtoken({ user: userData });
+
+    return res.status(200).json({
+      success: true,
+      msg: "Token Refreshed",
+      accessToken,
+      refreshToken,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({
+      success: false,
+      msg: error,
+    });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    const token =
+      req.body.token || req.query.token || req.headers["authorization"];
+
+    const bearer = token.split(" ");
+    const bearerToken = bearer[1];
+
+    const newBlacklistToken = new BlacklistToken({
+      token: bearerToken,
+      expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
+    });
+
+    // console.log(newBlacklistToken);
+
+    await newBlacklistToken.save();
+    res.setHeader("Clear-Site-Data", "'cookies', 'storage'");
+    return res.status(200).json({
+      success: true,
+      msg: "You are logged out successfully !!",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({
+      success: false,
+      msg: error,
+    });
+  }
+};
+
 module.exports = {
   register,
   mailVerification,
@@ -394,4 +444,6 @@ module.exports = {
   login,
   userProfile,
   updateProfile,
+  refreshToken,
+  logout,
 };
