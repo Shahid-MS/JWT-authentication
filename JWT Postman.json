@@ -1,0 +1,177 @@
+{
+	"info": {
+		"_postman_id": "c8dcfd7c-28a7-403b-a48f-51e657958251",
+		"name": "JWT",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33316448"
+	},
+	"item": [
+		{
+			"name": "Register",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "Mail verification",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "Pasword Reset",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\" :\"being.ms.2.o@gmail.com\",\r\n    \"password\" : \"ms\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "userprofile",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Auth",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7Il9pZCI6IjY2NjgyMzFhM2E3MjkxM2Y4MDBhOTEwZSIsIm5hbWUiOiJNUyIsImVtYWlsIjoiYmVpbmdtczJvQGdtYWlsLmNvbSIsIm1vYmlsZSI6Ijk1MzQxNzUwODgiLCJwYXNzd29yZCI6IiQyYiQxMCQzN1VYUHliT3VCT3B2ay9QcGRnQy5lcFd1NzJrSWJQV3EyU0Vra2prelBwRFJvQXdvSFJ6QyIsImlzX3ZlcmlmaWVkIjoxLCJfX3YiOjB9LCJpYXQiOjE3MTgyNzA0NDMsImV4cCI6MTcxODI3NzY0M30.IfBDHj8iH6l3ogcC6bl0fLx3v3E5oYyt7Kugz0NkGew",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/api/user-profile",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"user-profile"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "update profile",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "refresh token",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "logout",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "send otp",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"being.ms.2.o@gmail.com\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/send-otp",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"send-otp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "otp verification",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"userId\": \"666acb1924aaacd831b3d244\",\r\n    \"otp\": \"253147\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/verify-otp",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"verify-otp"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
