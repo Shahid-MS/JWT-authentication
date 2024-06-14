@@ -13,6 +13,14 @@ const {
   generateAccesstoken,
   generateRefreshtoken,
 } = require("../Helpers/token.js");
+const {
+  otpGenerator,
+  oneMinOtpExpiry,
+  threeMinOtpExpiry,
+} = require("../Helpers/otpHelper");
+
+const Otp = require("../Models/otp");
+const { timeStamp } = require("console");
 
 const register = async (req, res, file) => {
   try {
@@ -433,6 +441,159 @@ const logout = async (req, res) => {
   }
 };
 
+const sendOtp = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        msg: "Errors",
+        errors: errors.array(),
+      });
+    }
+
+    const { email } = req.body;
+    const userData = await User.findOne({ email });
+
+    if (!userData) {
+      return res.status(400).json({
+        success: false,
+        msg: "User doesn't exist",
+      });
+    }
+
+    if (userData.is_verified === 1) {
+      return res.status(400).json({
+        success: false,
+        msg: "User already verified",
+      });
+    }
+
+    const oldOtpData = await Otp.findOne({
+      user_id: userData._id,
+    });
+    if (oldOtpData) {
+      const otpExpire = await oneMinOtpExpiry(oldOtpData.timeStamp);
+      // console.log(oldOtpData);
+      // console.log(oldOtpData.timeStamp);
+      // console.log(otpExpire);
+
+      if (!otpExpire) {
+        return res.status(400).json({
+          success: false,
+          msg: "Please wait for sometime before resend otp",
+        });
+      }
+    }
+
+    const otp = otpGenerator();
+    const currDate = new Date();
+    await Otp.findOneAndUpdate(
+      {
+        user_id: userData._id,
+      },
+      {
+        otp,
+        timeStamp: new Date(currDate.getTime()),
+      },
+      {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+      }
+    );
+
+    // console.log(saveOtp);
+    const msg = `<p> Hii  ${userData.name}. Your otp for verification is <b>${otp}</b></p>`;
+
+    mailer.sendMail(userData.email, "Otp Verification", msg);
+
+    return res.status(200).json({
+      success: true,
+      msg: "Mail sent successfully",
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      msg: error.message,
+    });
+  }
+};
+
+const verifyOtp = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        msg: "Errors",
+        errors: errors.array(),
+      });
+    }
+
+    const { userId, otp } = req.body;
+
+    const userData = await User.findById(userId);
+
+    if (!userData) {
+      return res.status(400).json({
+        success: false,
+        msg: "User Id is not valid",
+      });
+    }
+    if (userData.is_verified === 1) {
+      return res.status(400).json({
+        success: false,
+        msg: "User is already verified",
+      });
+    }
+
+    // console.log(req.body);
+    const otpData = await Otp.findOne({
+      user_id: userId,
+      otp,
+    });
+
+    if (!otpData) {
+      return res.status(400).json({
+        success: false,
+        msg: "You eneted wrong OTP",
+      });
+    }
+
+    const isOtpExpired = await threeMinOtpExpiry(otpData.timeStamp);
+
+    if (isOtpExpired) {
+      return res.status(400).json({
+        success: false,
+        msg: "OTP has been expired",
+      });
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      $set: {
+        is_verified: 1,
+      },
+    });
+
+    await Otp.findOneAndDelete({
+      user_id: userId,
+    });
+
+    // console.log(updatedUser);
+
+    return res.status(200).json({
+      success: true,
+      msg: "Your account has been verified successfully",
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      msg: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   mailVerification,
@@ -446,4 +607,6 @@ module.exports = {
   updateProfile,
   refreshToken,
   logout,
+  sendOtp,
+  verifyOtp,
 };

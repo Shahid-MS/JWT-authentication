@@ -12,6 +12,8 @@ const {
   passwordResetValidator,
   loginValidator,
   updateProfileValidator,
+  otpValidator,
+  verifyOtpValidator,
 } = require("../Helpers/validator");
 
 const storage = multer.diskStorage({
@@ -77,5 +79,9 @@ router.post(
 router.get("/refresh-token", auth, userController.refreshToken);
 
 router.get("/logout", auth, userController.logout);
+
+router.get("/send-otp", otpValidator, userController.sendOtp);
+router.get("/verify-otp", verifyOtpValidator, userController.verifyOtp);
+module.exports = router;
 
 module.exports = router;
